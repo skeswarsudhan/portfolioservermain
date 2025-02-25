@@ -125,8 +125,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-iso639==2024.10.22
 python-magic==0.4.27
-pytz==2024.2
-pywin32==308
+pytz==2025.1
 PyYAML==6.0.2
 pyzmq==26.2.0
 RapidFuzz==3.11.0
