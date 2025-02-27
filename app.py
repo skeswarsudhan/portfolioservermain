@@ -274,4 +274,4 @@ def get_images():
 
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=False)  # Turn off debug mode in production
+    app.run()
