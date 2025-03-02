@@ -181,6 +181,11 @@ image_collection = db['images']
 
 # ----- Routes -----
 
+@app.route('/hello', methods=['GET'])
+def hello_server():
+    return "hello"
+    
+    
 # Add a new comment
 @app.route('/comments', methods=['POST'])
 def add_comment():
@@ -260,6 +265,7 @@ def upload_image():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
 
 
 # Fetch all images
