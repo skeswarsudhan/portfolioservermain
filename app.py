@@ -161,10 +161,11 @@ import base64
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__) 
 
 # CORS - Allow only required origins in production
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": ["https://portfoliofrontend-mauve.vercel.app", "http://localhost:3000"]}})
+
 
 # MongoDB Connection
 MONGO_URI = "mongodb+srv://skeswarsudhan:kQHN0YckOjqefuT9@cluster0.j2l11nz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
