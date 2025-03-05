@@ -147,7 +147,7 @@
 
 # if __name__ == '__main__':
 #     app.run()
-
+import smtplib
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -157,6 +157,8 @@ from flask_cors import CORS
 from PIL import Image
 import io
 import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Load environment variables from .env file
 load_dotenv()
@@ -168,7 +170,10 @@ CORS(app, resources={r"/*": {"origins": ["https://portfoliofrontend-mauve.vercel
 
 
 # MongoDB Connection
-MONGO_URI = "mongodb+srv://skeswarsudhan:kQHN0YckOjqefuT9@cluster0.j2l11nz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_dir, '.env')
+load_dotenv(dotenv_path=env_path, verbose=True)
+MONGO_URI = os.getenv("MONGO_URI")
 if not MONGO_URI:
     raise ValueError("MONGO_URI is not set in the environment variables.")
 
@@ -180,6 +185,83 @@ comment_collection = db['comments']
 project_collection = db['projects']
 image_collection = db['images']
 
+def send_email_notification(name, email, comment):
+    # Load environment variables 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    env_path = os.path.join(script_dir, '.env')
+    load_dotenv(dotenv_path=env_path, verbose=True)
+
+    # Retrieve email credentials
+    email_user = os.getenv("EMAIL_USER")
+    email_pass = os.getenv("EMAIL_PASS")
+    notify_email = os.getenv("NOTIFY_EMAIL")
+
+    # Validate email configuration
+    if not all([email_user, email_pass, notify_email]):
+        print("Email configuration is incomplete. Check your .env file.")
+        return False
+
+    try:
+        # Create email message
+        msg = MIMEMultipart()
+        msg['From'] = email_user
+        msg['To'] = notify_email
+        msg['Subject'] = "New Feedback Received!"
+
+        # Compose email body
+        body = f"""
+New feedback submitted:
+
+Name: {name}
+Contact Email: {email}
+Message: {comment}
+"""
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Send email via SMTP
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(email_user, email_pass)
+            server.send_message(msg)
+            
+            print("Notification email sent successfully!")
+            return True
+
+    except smtplib.SMTPAuthenticationError:
+        print("SMTP Authentication Error: Check your email credentials")
+        return False
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
+
+# Modify your existing add_comment route to use this function
+@app.route('/comments', methods=['POST'])
+def add_comment():
+    try:
+        data = request.get_json()
+        if not all(key in data for key in ['name', 'email', 'comment']):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Insert comment to database
+        comment_id = comment_collection.insert_one({
+            'name': data['name'],
+            'email': data['email'],
+            'comment': data['comment']
+        }).inserted_id
+
+        # Send email notification
+        send_email_notification(
+            name=data['name'], 
+            email=data['email'], 
+            comment=data['comment']
+        )
+
+        return jsonify({
+            'message': 'Comment added successfully!', 
+            'comment_id': str(comment_id)
+        }), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 # ----- Routes -----
 
 @app.route('/hello', methods=['GET'])
@@ -188,23 +270,24 @@ def hello_server():
     
     
 # Add a new comment
-@app.route('/comments', methods=['POST'])
-def add_comment():
-    try:
-        data = request.get_json()
-        if not all(key in data for key in ['name', 'email', 'comment']):
-            return jsonify({'error': 'Missing required fields'}), 400
+# @app.route('/comments', methods=['POST'])
+# def add_comment():
+#     try:
+#         data = request.get_json()
+#         if not all(key in data for key in ['name', 'email', 'comment']):
+#             return jsonify({'error': 'Missing required fields'}), 400
 
-        comment_id = comment_collection.insert_one({
-            'name': data['name'],
-            'email': data['email'],
-            'comment': data['comment']
-        }).inserted_id
+#         comment_id = comment_collection.insert_one({
+#             'name': data['name'],
+#             'email': data['email'],
+#             'comment': data['comment']
+#         }).inserted_id
+#         send_email_notification(data['name'], data['email'], data['comment'])
 
-        return jsonify({'message': 'Comment added successfully!', 'comment_id': str(comment_id)}), 201
+#         return jsonify({'message': 'Comment added successfully!', 'comment_id': str(comment_id)}), 201
 
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 
 # Fetch all projects
