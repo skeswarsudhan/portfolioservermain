@@ -18,7 +18,7 @@
 # CORS(app)
 
 # # Connect to MongoDB using the connection string from environment variables
-# uri = "mongodb+srv://skeswarsudhan:kQHN0YckOjqefuT9@cluster0.j2l11nz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+# uri = ""
 # # Create a new client and connect to the server
 # client = MongoClient(uri, server_api=ServerApi('1'))
 
