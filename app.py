@@ -388,7 +388,7 @@ load_dotenv()
 app = Flask(__name__) 
 
 # CORS - Allow only required origins in production
-CORS(app, resources={r"/*": {"origins": ["https://portfoliofrontend-mauve.vercel.app", "http://localhost:3000"]}})
+CORS(app, resources={r"/*": {"origins": ["https://portfoliofrontend-mauve.vercel.app", "http://localhost:3000", "https://skeswarsudhan.vercel.app"]}})
 
 
 # MongoDB Connection
